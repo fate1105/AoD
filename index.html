@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hồ Sơ Điều Tra — Trình Thám Tử Suy Luận</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="wrap">
+  <div class="folder" id="topFolder">
+    <span class="tab-label" id="fileNoLabel">Hồ sơ điều tra</span>
+    <div class="header-box" id="headerBox">
+      <div class="header-top-row">
+        <div class="header-title-group">
+          <h1 id="caseTitleHeader">Hồ Sơ Điều Tra</h1>
+          <p class="subtitle" id="caseSubtitle" style="display:none;"></p>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <button class="header-settings-btn" id="headerSettingsBtn" onclick="openSettingsModal()" title="Thiết lập & Không gian làm việc">⚙️</button>
+          <button class="header-back-btn" id="headerBackBtn" onclick="goTo('caseSelect')" title="Chọn vụ án khác" style="display:none;">← Đổi vụ án</button>
+        </div>
+      </div>
+
+      <!-- Case Progress Summary Checklist Bar (Above Time Bar) -->
+      <div class="hub-summary-banner" id="hubSummaryBanner" style="display:none;"></div>
+
+      <!-- Time Bar -->
+      <div class="time-bar-wrap" id="timeBarWrap" style="display:none;">
+        <div class="time-bar-head">
+          <span>Thời gian điều tra còn lại</span>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <button class="btn-investigation-extension" id="btnBorrowTimeHeader" onclick="promptBorrowTime()" title="Lệnh Khẩn Cấp: Gia hạn thời gian điều tra (+15 phút, -8 điểm Uy Tín)"><span class="ext-icon">⏳</span> Gia hạn +15p <span class="ext-badge" id="borrowTimeCountBadge">2</span></button>
+            <span id="timeLabel">— phút</span>
+          </div>
+        </div>
+        <div class="time-bar-track"><div class="time-bar-fill" id="timeFill" style="width:100%"></div></div>
+      </div>
+
+      <!-- Quick Access Detective Integrated Bar -->
+      <div class="detective-bar" id="detectiveBar" style="display:none;">
+        <button class="d-bar-btn" onclick="openCaseProfileModal()" title="Hồ sơ vụ án (Phím H)">
+          <span class="d-bar-icon">📂</span>
+          <span class="d-bar-label">Hồ sơ</span>
+          <span class="d-bar-kbd">H</span>
+        </button>
+        <button class="d-bar-btn" onclick="openTimelineModal()" title="Xem trục thời gian (Phím T)">
+          <span class="d-bar-icon">⏱️</span>
+          <span class="d-bar-label">Thời gian</span>
+          <span class="d-bar-kbd">T</span>
+        </button>
+        <button class="d-bar-btn" onclick="openCluesListModal()" title="Sổ tay manh mối (Phím M)">
+          <span class="d-bar-icon">📌</span>
+          <span class="d-bar-label">Manh mối</span>
+          <span class="d-bar-badge" id="badgeEvidence">0</span>
+          <span class="d-bar-kbd">M</span>
+        </button>
+        <button class="d-bar-btn d-bar-board" id="btnToggleBoard" onclick="toggleBoardScene()" title="Mở / đóng Sổ tay suy luận (Phím B)">
+          <span class="d-bar-icon">📓</span>
+          <span class="d-bar-label">Sổ tay</span>
+          <span class="d-bar-kbd">B</span>
+        </button>
+        <button class="d-bar-btn" onclick="openScratchpadModal()" title="Sổ ghi chép nhanh (Phím N)">
+          <span class="d-bar-icon">📝</span>
+          <span class="d-bar-label">Ghi chú</span>
+          <span class="d-bar-kbd">N</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="game-layout">
+    <div class="story-panel" id="storyPanel"></div>
+  </div>
+
+  <!-- Universal Detective Modals (Center Overlay) -->
+  <div class="detective-modal-overlay" id="detectiveModalOverlay" onclick="closeDetectiveModal()"></div>
+  <div class="detective-modal" id="detectiveModal">
+    <div class="det-modal-header">
+      <div class="det-modal-title" id="detModalTitle">Hồ Sơ</div>
+    </div>
+    <div class="det-modal-body" id="detModalBody"></div>
+  </div>
+  <footer>Vụ án nguyên bản &middot; Chạy hoàn toàn offline (trừ font chữ tải từ Google Fonts) &middot; Chơi lại để thử các tổ hợp suy luận khác</footer>
+</div>
+
+<script src="js/cases/case01_blackwood.js"></script>
+<script src="js/cases/case02_ravenscroft.js"></script>
+<script src="js/cases/case03_final_melody.js"></script>
+<script src="js/cases.js"></script>
+<script src="js/engine.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>
