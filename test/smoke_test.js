@@ -49,14 +49,22 @@ const case2Code = fs.readFileSync(path.join(__dirname, '../js/cases/case02_raven
 const case3Code = fs.readFileSync(path.join(__dirname, '../js/cases/case03_final_melody.js'), 'utf8');
 const casesCode = fs.readFileSync(path.join(__dirname, '../js/cases.js'), 'utf8');
 const engineCode = fs.readFileSync(path.join(__dirname, '../js/engine.js'), 'utf8');
-const uiCode = fs.readFileSync(path.join(__dirname, '../js/ui.js'), 'utf8');
+const uiCoreCode = fs.readFileSync(path.join(__dirname, '../js/ui-core.js'), 'utf8');
+const uiModalsCode = fs.readFileSync(path.join(__dirname, '../js/ui-modals.js'), 'utf8');
+const uiTimelineCode = fs.readFileSync(path.join(__dirname, '../js/ui-timeline.js'), 'utf8');
+const uiBoardCode = fs.readFileSync(path.join(__dirname, '../js/ui-board.js'), 'utf8');
+const uiScenesCode = fs.readFileSync(path.join(__dirname, '../js/ui-scenes.js'), 'utf8');
 
 vm.runInThisContext(case1Code);
 vm.runInThisContext(case2Code);
 vm.runInThisContext(case3Code);
 vm.runInThisContext(casesCode);
 vm.runInThisContext(engineCode);
-vm.runInThisContext(uiCode);
+vm.runInThisContext(uiCoreCode);
+vm.runInThisContext(uiModalsCode);
+vm.runInThisContext(uiTimelineCode);
+vm.runInThisContext(uiBoardCode);
+vm.runInThisContext(uiScenesCode);
 
 function assert(condition, message) {
   if (!condition) {
@@ -440,6 +448,68 @@ const earnedAch = checkAchievements('perfect', computeIndex());
 const caseSave = getCaseSave(CASE.id);
 assert(caseSave.achievements.includes('systematic_thinker'), 'Systematic Thinker achievement must be earned for >=3 theories');
 console.log('✓ Working Theory Board & Systematic Thinker achievement verified!');
+
+// Test 4.11: Active In-Progress Session Save & Resume (Item B)
+console.log('Testing Active In-Progress Session Save & Resume...');
+selectCase(0);
+beginInvestigation();
+addClue('ladder');
+addClue('footprints');
+state.visitedLocations.push('greenhouse');
+state.time = 45;
+assignTimelineSlot('09:35', 'evt_victim_greenhouse');
+
+assert(saveCurrentGameState('case01_blackwood'), 'saveCurrentGameState must return true');
+assert(hasSavedGame('case01_blackwood'), 'hasSavedGame must detect saved progress');
+
+// Reset state in memory
+resetState();
+assert(state.clues.length === 0, 'State should be empty after reset');
+
+// Resume
+assert(loadCurrentGameState('case01_blackwood'), 'loadCurrentGameState must restore session');
+assert(state.clues.includes('ladder') && state.clues.includes('footprints'), 'Clues must be restored');
+assert(state.time === 45, 'Time must be restored');
+assert(state.timelineSlots['09:35'] === 'evt_victim_greenhouse', 'Timeline slots must be restored');
+
+clearCurrentGameSave('case01_blackwood');
+assert(!hasSavedGame('case01_blackwood'), 'Saved game must be cleared');
+console.log('✓ Active In-Progress Session Save & Resume verified!');
+
+// Test 4.12: Procedural Victorian Ambient Audio Controller (Item F)
+console.log('Testing Procedural Victorian Ambient Audio controller...');
+assert(typeof ambientAudio !== 'undefined', 'ambientAudio must exist');
+assert(typeof ambientAudio.start === 'function', 'ambientAudio.start must exist');
+assert(typeof ambientAudio.stop === 'function', 'ambientAudio.stop must exist');
+assert(typeof ambientAudio.setVolume === 'function', 'ambientAudio.setVolume must exist');
+assert(typeof ambientAudio.setMode === 'function', 'ambientAudio.setMode must exist');
+
+ambientAudio.setVolume(0.5);
+assert(Math.abs(ambientAudio.getVolume() - 0.5) < 0.01, 'Ambient volume should be 0.5');
+
+ambientAudio.setMode('rain');
+assert(ambientAudio.getMode() === 'rain', 'Ambient mode should be rain');
+ambientAudio.setMode('all');
+
+ambientAudio.start();
+ambientAudio.stop();
+console.log('✓ Procedural Victorian Ambient Audio controller verified!');
+
+// Test 4.13: Corkboard Auto-Arrange & Tutorial Field Manual (Items C & H)
+console.log('Testing Corkboard Auto-Arrange & Tutorial Field Manual...');
+selectCase(0);
+beginInvestigation();
+addClue('ladder');
+addClue('footprints');
+autoArrangeCorkGrid();
+assert(state.cluePositions['ladder'] !== undefined, 'Auto arrange must assign position to ladder');
+assert(state.cluePositions['footprints'] !== undefined, 'Auto arrange must assign position to footprints');
+
+assert(typeof openTutorialModal === 'function', 'openTutorialModal must exist');
+assert(typeof selectTutorialTab === 'function', 'selectTutorialTab must exist');
+selectTutorialTab('contradiction');
+assert(currentTutorialTab === 'contradiction', 'Tutorial tab must switch to contradiction');
+console.log('✓ Corkboard Auto-Arrange & Tutorial Field Manual verified!');
 
 console.log('\n==================================================');
 console.log('🎉 ALL SMOKE TESTS PASSED! 100% VERIFIED!');

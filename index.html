@@ -3,7 +3,31 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Hồ Sơ Điều Tra — Trình Thám Tử Suy Luận</title>
+<title>Hồ Sơ Điều Tra — Trình Thám Tử Suy Luận (Art of Deduction)</title>
+
+<!-- Primary SEO Meta Tags -->
+<meta name="title" content="Art of Deduction — Trình Thám Tử Suy Luận (Sherlockian Mystery Engine)">
+<meta name="description" content="Trò chơi trinh thám suy luận offline thuần Vanilla JavaScript. Tái hiện phương pháp tư duy quan sát vi mô, lập luận logic và thẩm vấn tâm lý kinh điển của Sherlock Holmes.">
+<meta name="keywords" content="Art of Deduction, Sherlock Holmes, game trinh thám, game suy luận, detective game, puzzle, mind palace, logic mystery, Victorian mystery">
+<meta name="author" content="Art of Deduction">
+<meta name="robots" content="index, follow">
+<meta name="theme-color" content="#1a1410">
+
+<!-- Open Graph / Facebook -->
+<meta property="og:type" content="website">
+<meta property="og:locale" content="vi_VN">
+<meta property="og:site_name" content="Art of Deduction">
+<meta property="og:title" content="Art of Deduction — Trình Thám Tử Suy Luận">
+<meta property="og:description" content="Quan sát mọi thứ. Suy luận sự thật. Tái hiện trọn vẹn trải nghiệm điều tra trinh thám London thế kỷ 19.">
+
+<!-- Twitter Cards -->
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Art of Deduction — Trình Thám Tử Suy Luận">
+<meta name="twitter:description" content="Quan sát mọi thứ. Suy luận sự thật. Trò chơi trinh thám suy luận Sherlockian không cần cài đặt.">
+
+<!-- Standalone SVG Data URI Favicon (Victorian Detective Magnifying Glass) -->
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='28' cy='28' r='18' fill='none' stroke='%23f1c40f' stroke-width='4'/%3E%3Ccircle cx='28' cy='28' r='14' fill='%231a1410' opacity='0.8'/%3E%3Cpath d='M41 41 L56 56' stroke='%23d4af37' stroke-width='6' stroke-linecap='round'/%3E%3Cpath d='M22 28 Q28 20 34 28' stroke='%23efe2c0' stroke-width='2' fill='none' stroke-linecap='round' opacity='0.7'/%3E%3C/svg%3E">
+
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -17,6 +41,7 @@
           <p class="subtitle" id="caseSubtitle" style="display:none;"></p>
         </div>
         <div style="display:flex;align-items:center;gap:8px;">
+          <button class="header-settings-btn" id="headerManualBtn" onclick="openTutorialModal()" title="Sổ tay nghiệp vụ thám tử (Hướng dẫn)">📖</button>
           <button class="header-settings-btn" id="headerSettingsBtn" onclick="openSettingsModal()" title="Thiết lập & Không gian làm việc">⚙️</button>
           <button class="header-back-btn" id="headerBackBtn" onclick="goTo('caseSelect')" title="Chọn vụ án khác" style="display:none;">← Đổi vụ án</button>
         </div>
@@ -65,6 +90,10 @@
           <span class="d-bar-label">Ghi chú</span>
           <span class="d-bar-kbd">N</span>
         </button>
+        <button class="d-bar-btn" onclick="openTutorialModal()" title="Sổ tay nghiệp vụ & Quy tắc phá án">
+          <span class="d-bar-icon">📖</span>
+          <span class="d-bar-label">Cẩm nang</span>
+        </button>
       </div>
     </div>
   </div>
@@ -84,12 +113,23 @@
   <footer>Vụ án nguyên bản &middot; Chạy hoàn toàn offline (trừ font chữ tải từ Google Fonts) &middot; Chơi lại để thử các tổ hợp suy luận khác</footer>
 </div>
 
+<!-- Cases Database -->
 <script src="js/cases/case01_blackwood.js"></script>
 <script src="js/cases/case02_ravenscroft.js"></script>
 <script src="js/cases/case03_final_melody.js"></script>
 <script src="js/cases.js"></script>
+
+<!-- Logic Core Engine -->
 <script src="js/engine.js"></script>
-<script src="js/ui.js"></script>
+
+<!-- Modular UI Components -->
+<script src="js/ui-core.js"></script>
+<script src="js/ui-modals.js"></script>
+<script src="js/ui-timeline.js"></script>
+<script src="js/ui-board.js"></script>
+<script src="js/ui-scenes.js"></script>
+
+<!-- Game Bootstrapper -->
 <script src="js/main.js"></script>
 </body>
 </html>

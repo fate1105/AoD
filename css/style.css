@@ -2851,20 +2851,25 @@ footer {
 
 .corkboard {
   position: relative;
-  min-height: 460px;
-  height: 52vh;
-  max-height: 580px;
-  background-color: #7a5435;
+  min-height: 480px;
+  height: 56vh;
+  max-height: 620px;
+  background-color: #6d4627;
   background-image:
-    repeating-linear-gradient(45deg, rgba(0, 0, 0, 0.04) 0, rgba(0, 0, 0, 0.04) 1px, transparent 1px, transparent 9px),
-    repeating-linear-gradient(-45deg, rgba(0, 0, 0, 0.03) 0, rgba(0, 0, 0, 0.03) 1px, transparent 1px, transparent 9px),
-    radial-gradient(ellipse at 18% 28%, rgba(80, 50, 20, 0.7) 0%, transparent 55%),
-    radial-gradient(ellipse at 72% 78%, rgba(50, 30, 10, 0.5) 0%, transparent 45%);
-  border: 3px solid #3d2410;
-  border-radius: 4px;
-  box-shadow: inset 0 0 70px rgba(0, 0, 0, 0.45), 0 8px 30px rgba(0, 0, 0, 0.5);
+    radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.04) 0%, transparent 80%),
+    repeating-linear-gradient(45deg, rgba(0, 0, 0, 0.05) 0, rgba(0, 0, 0, 0.05) 2px, transparent 2px, transparent 12px),
+    repeating-linear-gradient(-45deg, rgba(0, 0, 0, 0.04) 0, rgba(0, 0, 0, 0.04) 2px, transparent 2px, transparent 12px),
+    radial-gradient(ellipse at 20% 30%, rgba(40, 20, 5, 0.8) 0%, transparent 60%),
+    radial-gradient(ellipse at 80% 75%, rgba(30, 15, 5, 0.7) 0%, transparent 55%);
+  border: 5px solid #2a1506;
+  border-radius: 6px;
+  box-shadow:
+    inset 0 0 80px rgba(0, 0, 0, 0.75),
+    inset 0 0 15px rgba(0, 0, 0, 0.9),
+    0 12px 35px rgba(0, 0, 0, 0.7);
   overflow: hidden;
   user-select: none;
+  touch-action: none; /* Smooth mobile drag */
 }
 
 .cork-svg {
@@ -2878,79 +2883,127 @@ footer {
   overflow: visible;
 }
 
-/* Pin card */
+/* Pin card with 3D Depth & Aged Parchment */
 .cork-pin {
   position: absolute;
   width: 155px;
   cursor: grab;
   z-index: 10;
-  transition: filter 0.15s ease;
+  touch-action: none;
+  transition: transform 0.18s cubic-bezier(0.2, 0.8, 0.2, 1), filter 0.18s ease;
+  transform-origin: center top;
 }
 
-.cork-pin:active {
+.cork-pin:active,
+.cork-pin.dragging {
   cursor: grabbing;
+  z-index: 250 !important;
+  transform: scale(1.04) rotate(0deg) !important;
+  filter: drop-shadow(0 15px 25px rgba(0, 0, 0, 0.75)) !important;
 }
 
+/* Realistic 3D Brass & Wax Pushpins */
 .cork-pin .pin-head {
-  width: 14px;
-  height: 14px;
-  background: #c0392b;
+  width: 16px;
+  height: 16px;
+  background: radial-gradient(circle at 35% 30%, #ff7675 0%, #d63031 45%, #7e1212 90%, #3a0000 100%);
   border-radius: 50%;
   margin: 0 auto;
   position: relative;
-  z-index: 2;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.55), inset 0 1px 2px rgba(255, 255, 255, 0.25);
-  transition: background 0.15s ease, box-shadow 0.15s ease;
+  z-index: 5;
+  border: 1px solid rgba(0, 0, 0, 0.6);
+  box-shadow:
+    0 3px 6px rgba(0, 0, 0, 0.6),
+    0 6px 12px rgba(0, 0, 0, 0.35),
+    inset 0 1px 2px rgba(255, 255, 255, 0.7);
+  transition: all 0.18s ease;
+}
+
+.cork-pin .pin-head::after {
+  content: '';
+  position: absolute;
+  bottom: -4px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 4px;
+  height: 4px;
+  background: #2d3436;
+  border-radius: 50%;
+  opacity: 0.8;
 }
 
 .cork-pin.key-pin .pin-head {
-  background: #c4a870;
+  background: radial-gradient(circle at 35% 30%, #ffeaa7 0%, #fdcb6e 45%, #b7791f 90%, #5c3d12 100%);
+  border: 1px solid rgba(138, 106, 48, 0.8);
+  box-shadow:
+    0 3px 6px rgba(0, 0, 0, 0.6),
+    0 0 8px rgba(241, 196, 15, 0.4),
+    inset 0 1px 2px rgba(255, 255, 255, 0.9);
 }
 
 .cork-pin.selected .pin-head {
-  background: #f39c12;
-  box-shadow: 0 0 10px rgba(243, 156, 18, 0.9), 0 2px 5px rgba(0, 0, 0, 0.5);
+  background: radial-gradient(circle at 35% 30%, #fff 0%, #f1c40f 45%, #d35400 90%, #4e1900 100%);
+  box-shadow:
+    0 0 14px rgba(241, 196, 15, 1),
+    0 3px 8px rgba(0, 0, 0, 0.8),
+    inset 0 1px 3px rgba(255, 255, 255, 1);
+  transform: scale(1.15);
 }
 
+/* Aged Parchment Note Card */
 .cork-pin .pin-note {
-  background: #f0e9d5;
-  color: #2a2010;
+  background: #f4ebd5;
+  background-image:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.4) 0%, transparent 10%),
+    radial-gradient(circle at 50% 10%, rgba(200, 160, 100, 0.15) 0%, transparent 60%),
+    linear-gradient(135deg, rgba(160, 120, 60, 0.06) 0%, transparent 100%);
+  color: #241708;
   font-family: 'Courier Prime', monospace;
   font-size: 10.5px;
   line-height: 1.45;
-  padding: 8px 10px 10px;
-  margin-top: -5px;
-  border-radius: 1px;
-  box-shadow: 2px 5px 14px rgba(0, 0, 0, 0.45);
-  transition: box-shadow 0.15s ease, transform 0.15s ease;
+  padding: 10px 10px 10px;
+  margin-top: -6px;
+  border-radius: 2px;
+  border: 1px solid rgba(120, 85, 45, 0.25);
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.2),
+    3px 6px 16px rgba(0, 0, 0, 0.45);
+  transition: all 0.18s cubic-bezier(0.2, 0.8, 0.2, 1);
+  position: relative;
 }
 
 .cork-pin:hover .pin-note {
-  box-shadow: 4px 7px 18px rgba(0, 0, 0, 0.65);
-  transform: translateY(-2px);
+  box-shadow:
+    0 2px 4px rgba(0, 0, 0, 0.2),
+    6px 12px 24px rgba(0, 0, 0, 0.6);
+  transform: translateY(-3px);
+  background-color: #fff8e8;
 }
 
 .cork-pin.selected .pin-note {
-  background: #fffde8;
-  box-shadow: 0 0 0 2.5px #f39c12, 4px 6px 16px rgba(0, 0, 0, 0.5);
-}
-
-.cork-pin.selected:hover {
-  filter: brightness(1.05);
+  background: #fffae6;
+  border-color: #f1c40f;
+  box-shadow:
+    0 0 0 2.5px #f1c40f,
+    0 0 16px rgba(241, 196, 15, 0.35),
+    6px 10px 22px rgba(0, 0, 0, 0.55);
 }
 
 .cork-pin .pin-note b {
   display: block;
   font-family: 'Playfair Display', serif;
-  font-size: 11.5px;
-  color: #5c3d12;
+  font-size: 12px;
+  font-weight: 700;
+  color: #4a2e0a;
   margin-bottom: 5px;
   line-height: 1.3;
+  letter-spacing: 0.2px;
 }
 
 .cork-pin .pin-note span {
-  color: #4a3820;
+  color: #3b2b18;
   font-size: 10.5px;
+  display: block;
 }
 
 /* Bottom bar */
@@ -5508,5 +5561,225 @@ footer {
 
   .d-bar-label {
     font-size: 9.5px;
+  }
+}
+
+/* ============================================================
+   ACTIVE GAME SESSION RESUME BANNER (Item B)
+   ============================================================ */
+.active-save-banner {
+  background: linear-gradient(135deg, rgba(243, 156, 18, 0.15) 0%, rgba(26, 20, 16, 0.85) 100%);
+  border: 1.5px solid #f1c40f;
+  border-left: 5px solid #f1c40f;
+  border-radius: 5px;
+  padding: 12px 14px;
+  margin-bottom: 14px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.active-save-info {
+  font-size: 13px;
+  color: #efe2c0;
+  line-height: 1.5;
+}
+
+.active-save-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.btn-resume-session {
+  background: #f1c40f;
+  color: #1a1208;
+  font-weight: 700;
+  font-size: 12.5px;
+  padding: 6px 14px;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.btn-resume-session:hover {
+  background: #f39c12;
+  transform: translateY(-1px);
+}
+
+.btn-restart-session {
+  background: transparent;
+  color: #e74c3c;
+  border: 1px solid rgba(231, 76, 60, 0.5);
+  font-size: 11.5px;
+  padding: 5px 10px;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.btn-restart-session:hover {
+  background: rgba(231, 76, 60, 0.15);
+}
+
+/* ============================================================
+   AMBIENT AUDIO SOUNDSCAPE CONTROLS (Item F)
+   ============================================================ */
+.ambient-control-card {
+  padding: 12px 14px;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 5px;
+  margin-top: 10px;
+}
+
+.ambient-slider-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.ambient-slider {
+  flex: 1;
+  accent-color: #f1c40f;
+  cursor: pointer;
+}
+
+.ambient-mode-chips {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.ambient-mode-chip {
+  padding: 4px 10px;
+  font-size: 11px;
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  background: rgba(0, 0, 0, 0.3);
+  color: #cdbf9e;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.ambient-mode-chip.active {
+  background: rgba(241, 196, 15, 0.2);
+  border-color: #f1c40f;
+  color: #f1c40f;
+  font-weight: bold;
+}
+
+/* ============================================================
+   INSPECTOR'S FIELD MANUAL & TUTORIAL (Item H)
+   ============================================================ */
+.tutorial-wrap {
+  font-family: 'Segoe UI', sans-serif;
+  color: #efe2c0;
+}
+
+.tutorial-tab-bar {
+  display: flex;
+  gap: 6px;
+  border-bottom: 1px solid rgba(212, 175, 55, 0.3);
+  padding-bottom: 8px;
+  margin-bottom: 14px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.tutorial-tab-btn {
+  padding: 6px 12px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #cdbf9e;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 4px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+}
+
+.tutorial-tab-btn.active {
+  background: #f1c40f;
+  color: #161210;
+  border-color: #f1c40f;
+}
+
+.tutorial-step-box {
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-left: 4px solid var(--brass);
+  border-radius: 5px;
+  padding: 14px 16px;
+  margin-bottom: 12px;
+}
+
+.tutorial-step-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 15px;
+  font-weight: 700;
+  color: #f1c40f;
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.tutorial-step-desc {
+  font-size: 13.5px;
+  color: #cdbf9e;
+  line-height: 1.6;
+}
+
+.tutorial-step-desc strong {
+  color: #efe2c0;
+}
+
+.tutorial-tip-badge {
+  display: inline-block;
+  padding: 2px 7px;
+  border-radius: 3px;
+  font-size: 11px;
+  background: rgba(46, 204, 113, 0.15);
+  color: #2ecc71;
+  border: 1px solid rgba(46, 204, 113, 0.3);
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+/* Mobile Corkboard Auto-Arrange and Responsiveness (Item C) */
+.cork-mobile-bar {
+  display: none;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+@media (max-width: 768px) {
+  .cork-mobile-bar {
+    display: flex;
+  }
+  
+  .corkboard {
+    min-height: 380px;
+    height: 48vh;
+  }
+
+  .cork-pin {
+    width: 135px;
+  }
+
+  .cork-pin .pin-note {
+    font-size: 9.5px;
+    padding: 7px 8px;
+  }
+
+  .cork-pin .pin-note b {
+    font-size: 10.5px;
   }
 }

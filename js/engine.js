@@ -37,7 +37,8 @@ var state = {
   timeBorrowCount: 0,        // số lần khẩn cầu gia hạn thời gian
   timeBorrowed: 0,           // tổng số phút đã vay
   difficultyMode: 'standard', // 'standard' (Chuẩn) | 'casual' (Thư Giãn)
-  mistakesCount: { contradiction: 0, timeline: 0, mindPalace: 0 }
+  mistakesCount: { contradiction: 0, timeline: 0, mindPalace: 0 },
+  hubScrollY: 0
 };
 
 function resetState(){
@@ -62,6 +63,7 @@ function resetState(){
   state.timeBorrowCount = 0;
   state.timeBorrowed = 0;
   state.mistakesCount = { contradiction: 0, timeline: 0, mindPalace: 0 };
+  state.hubScrollY = 0;
   if (!state.difficultyMode) state.difficultyMode = 'standard';
   
   // Holmes Extensions Reset
@@ -191,8 +193,10 @@ function isClueAvailable(clueId){
   return !state.expiredClues.includes(clueId);
 }
 
-/* ---------- save system: per-case progress ---------- */
+/* ---------- save system: per-case progress & active session ---------- */
 const SAVE_KEY = 'detective_game_save_v1';
+const SESSION_SAVE_PREFIX = 'aod_active_session_';
+
 function loadSave(){
   try{
     const raw = JSON.parse(localStorage.getItem(SAVE_KEY));
@@ -200,10 +204,12 @@ function loadSave(){
   }catch(e){}
   return {cases:{}};
 }
+
 function getCaseSave(caseId){
   const save = loadSave();
   return save.cases[caseId] || {endings:[], bestScore:0, completed:false, achievements:[]};
 }
+
 function persistEnding(caseId, endingId, score){
   const save = loadSave();
   const cur = save.cases[caseId] || {endings:[], bestScore:0, completed:false, achievements:[]};
@@ -211,13 +217,94 @@ function persistEnding(caseId, endingId, score){
   cur.bestScore = Math.max(cur.bestScore||0, score);
   cur.completed = true;
   save.cases[caseId] = cur;
-  localStorage.setItem(SAVE_KEY, JSON.stringify(save));
+  try {
+    localStorage.setItem(SAVE_KEY, JSON.stringify(save));
+    // When a case is resolved, clear active in-progress session
+    clearCurrentGameSave(caseId);
+  } catch(e) {}
 }
+
 function isCaseUnlocked(index){
   if(index === 0) return true;
   const prev = CASES[index-1];
   if(prev.comingSoon) return false;
   return getCaseSave(prev.id).completed;
+}
+
+function clearCaseSave(caseId){
+  try {
+    const save = loadSave();
+    delete save.cases[caseId];
+    localStorage.setItem(SAVE_KEY, JSON.stringify(save));
+    clearCurrentGameSave(caseId);
+  } catch(e) {}
+}
+
+/* ---------- Active In-Progress Session Save / Resume ---------- */
+function saveCurrentGameState(caseId){
+  if (!caseId || typeof localStorage === 'undefined') return false;
+  try {
+    const payload = {
+      version: 1,
+      caseId: caseId,
+      timestamp: Date.now(),
+      state: state,
+      pendingReveals: typeof pendingReveals !== 'undefined' ? pendingReveals : {},
+      warnedClues: typeof warnedClues !== 'undefined' ? warnedClues : []
+    };
+    localStorage.setItem(SESSION_SAVE_PREFIX + caseId, JSON.stringify(payload));
+    return true;
+  } catch(e) {
+    return false;
+  }
+}
+
+function loadCurrentGameState(caseId){
+  if (!caseId || typeof localStorage === 'undefined') return false;
+  try {
+    const raw = localStorage.getItem(SESSION_SAVE_PREFIX + caseId);
+    if (!raw) return false;
+    const payload = JSON.parse(raw);
+    if (!payload || !payload.state || payload.caseId !== caseId) return false;
+    
+    // Restore state properties safely
+    Object.assign(state, payload.state);
+    if (payload.pendingReveals) {
+      pendingReveals = payload.pendingReveals;
+    }
+    if (payload.warnedClues && typeof warnedClues !== 'undefined') {
+      warnedClues = payload.warnedClues;
+    }
+    return true;
+  } catch(e) {
+    return false;
+  }
+}
+
+function hasSavedGame(caseId){
+  if (!caseId || typeof localStorage === 'undefined') return false;
+  try {
+    const raw = localStorage.getItem(SESSION_SAVE_PREFIX + caseId);
+    if (!raw) return false;
+    const payload = JSON.parse(raw);
+    if (!payload || !payload.state) return false;
+    const s = payload.state;
+    // Check if session has meaningful progress
+    const hasProgress = (s.clues && s.clues.length > 0) ||
+                        (s.visitedLocations && s.visitedLocations.length > 0) ||
+                        (s.inspectedItems && s.inspectedItems.length > 0) ||
+                        (s.time !== undefined && s.time < (CASE ? CASE.timeBudget : 75));
+    return !!hasProgress;
+  } catch(e) {
+    return false;
+  }
+}
+
+function clearCurrentGameSave(caseId){
+  if (!caseId || typeof localStorage === 'undefined') return;
+  try {
+    localStorage.removeItem(SESSION_SAVE_PREFIX + caseId);
+  } catch(e) {}
 }
 
 /* ---------- achievements ---------- */
@@ -335,11 +422,7 @@ function inspectObservation(suspectId, obsId, inferenceId){
   const obs = suspect && suspect.observations ? suspect.observations.find(o => o.id === obsId) : null;
   const inf = obs && obs.inferences ? obs.inferences.find(i => i.id === inferenceId) : null;
   const conf = inf ? inf.confidence : 'medium';
-
-  let scoreDelta = 5;
-  if(conf === 'high') scoreDelta = 5;
-  else if(conf === 'medium') scoreDelta = 2;
-  else scoreDelta = 0;
+  const scoreDelta = conf === 'high' ? 5 : (conf === 'medium' ? 2 : 0);
 
   state.score += scoreDelta;
   return { success: true, confidence: conf, scoreDelta };
@@ -1039,3 +1122,199 @@ const sound = {
     }
   }
 };
+
+/* ============================================================
+   PROCEDURAL VICTORIAN AMBIENT SOUNDSCAPE (WebAudio API)
+   Procedural Victorian Rain on Windowpane + Baker St Grandfather Clock
+   100% offline, zero asset downloads, infinite non-looping synthesis.
+   ============================================================ */
+const AMBIENT_STORAGE_KEY = 'aod_ambient_enabled';
+const AMBIENT_VOL_KEY = 'aod_ambient_volume';
+const AMBIENT_MODE_KEY = 'aod_ambient_mode';
+
+let ambientRainSource = null;
+let ambientRainGain = null;
+let ambientClockInterval = null;
+let ambientMasterGain = null;
+let ambientRunning = false;
+let ambientMode = 'all'; // 'all', 'rain', 'clock'
+
+const ambientAudio = {
+  isEnabled: () => {
+    if (typeof localStorage === 'undefined') return true;
+    const v = localStorage.getItem(AMBIENT_STORAGE_KEY);
+    return v === null ? true : v === 'true';
+  },
+
+  getVolume: () => {
+    if (typeof localStorage === 'undefined') return 0.35;
+    const v = parseFloat(localStorage.getItem(AMBIENT_VOL_KEY));
+    return isNaN(v) ? 0.35 : Math.max(0, Math.min(1, v));
+  },
+
+  getMode: () => {
+    if (typeof localStorage === 'undefined') return 'all';
+    return localStorage.getItem(AMBIENT_MODE_KEY) || 'all';
+  },
+
+  setMode: (mode) => {
+    ambientMode = mode;
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem(AMBIENT_MODE_KEY, mode);
+    }
+    if (ambientRunning) {
+      ambientAudio.stop();
+      ambientAudio.start();
+    }
+  },
+
+  setVolume: (val) => {
+    const clamped = Math.max(0, Math.min(1, val));
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem(AMBIENT_VOL_KEY, clamped.toString());
+    }
+    if (ambientMasterGain && getAudioCtx()) {
+      try {
+        ambientMasterGain.gain.setValueAtTime(clamped * 0.18, getAudioCtx().currentTime);
+      } catch (e) {}
+    }
+  },
+
+  toggle: () => {
+    const next = !ambientAudio.isEnabled();
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem(AMBIENT_STORAGE_KEY, next ? 'true' : 'false');
+    }
+    if (next) {
+      ambientAudio.start();
+    } else {
+      ambientAudio.stop();
+    }
+    return next;
+  },
+
+  start: () => {
+    if (!ambientAudio.isEnabled() || ambientRunning) return;
+    const ctx = getAudioCtx();
+    if (!ctx) return;
+
+    if (ctx.state === 'suspended') {
+      ctx.resume().catch(() => {});
+    }
+
+    try {
+      ambientMode = ambientAudio.getMode();
+      const masterVol = ambientAudio.getVolume();
+
+      // Master Gain for all ambient sounds
+      ambientMasterGain = ctx.createGain();
+      ambientMasterGain.gain.setValueAtTime(masterVol * 0.18, ctx.currentTime);
+      ambientMasterGain.connect(ctx.destination);
+
+      // 1. Procedural Victorian Rain Generator (Filtered Pink Noise with lowpass + bandpass)
+      if (ambientMode === 'all' || ambientMode === 'rain') {
+        const bufferSize = ctx.sampleRate * 3;
+        const noiseBuffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+        const output = noiseBuffer.getChannelData(0);
+        let b0 = 0, b1 = 0, b2 = 0, b3 = 0, b4 = 0, b5 = 0, b6 = 0;
+
+        for (let i = 0; i < bufferSize; i++) {
+          const white = Math.random() * 2 - 1;
+          b0 = 0.99886 * b0 + white * 0.0555179;
+          b1 = 0.99332 * b1 + white * 0.0750759;
+          b2 = 0.96900 * b2 + white * 0.1538520;
+          b3 = 0.86650 * b3 + white * 0.3104856;
+          b4 = 0.55000 * b4 + white * 0.5329522;
+          b5 = -0.7616 * b5 - white * 0.0168980;
+          output[i] = (b0 + b1 + b2 + b3 + b4 + b5 + b6 + white * 0.5362) * 0.08;
+          b6 = white * 0.115926;
+        }
+
+        ambientRainSource = ctx.createBufferSource();
+        ambientRainSource.buffer = noiseBuffer;
+        ambientRainSource.loop = true;
+
+        const rainFilter = ctx.createBiquadFilter();
+        rainFilter.type = 'lowpass';
+        rainFilter.frequency.setValueAtTime(850, ctx.currentTime);
+
+        const rainFilter2 = ctx.createBiquadFilter();
+        rainFilter2.type = 'peaking';
+        rainFilter2.frequency.setValueAtTime(400, ctx.currentTime);
+        rainFilter2.gain.setValueAtTime(4.0, ctx.currentTime);
+
+        ambientRainGain = ctx.createGain();
+        ambientRainGain.gain.setValueAtTime(0.5, ctx.currentTime);
+
+        ambientRainSource.connect(rainFilter);
+        rainFilter.connect(rainFilter2);
+        rainFilter2.connect(ambientRainGain);
+        ambientRainGain.connect(ambientMasterGain);
+
+        ambientRainSource.start();
+      }
+
+      // 2. Procedural Grandfather Clock Pendulum Ticks (Slow 1-sec period: 'tick' ... 'tock')
+      if (ambientMode === 'all' || ambientMode === 'clock') {
+        let isHighTick = true;
+        ambientClockInterval = setInterval(() => {
+          if (!ambientRunning || isAudioMuted() || !ambientAudio.isEnabled()) return;
+          const tickCtx = getAudioCtx();
+          if (!tickCtx || !ambientMasterGain) return;
+
+          try {
+            const osc = tickCtx.createOscillator();
+            const oscGain = tickCtx.createGain();
+            const filter = tickCtx.createBiquadFilter();
+
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(isHighTick ? 740 : 560, tickCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(120, tickCtx.currentTime + 0.035);
+
+            filter.type = 'bandpass';
+            filter.frequency.setValueAtTime(isHighTick ? 950 : 700, tickCtx.currentTime);
+            filter.Q.setValueAtTime(4.5, tickCtx.currentTime);
+
+            oscGain.gain.setValueAtTime(0.065, tickCtx.currentTime);
+            oscGain.gain.exponentialRampToValueAtTime(0.0001, tickCtx.currentTime + 0.04);
+
+            osc.connect(filter);
+            filter.connect(oscGain);
+            oscGain.connect(ambientMasterGain);
+
+            osc.start(tickCtx.currentTime);
+            osc.stop(tickCtx.currentTime + 0.045);
+
+            isHighTick = !isHighTick;
+          } catch (e) {}
+        }, 1000);
+      }
+
+      ambientRunning = true;
+    } catch (e) {}
+  },
+
+  stop: () => {
+    ambientRunning = false;
+    if (ambientRainSource) {
+      try {
+        ambientRainSource.stop();
+        ambientRainSource.disconnect();
+      } catch (e) {}
+      ambientRainSource = null;
+    }
+    if (ambientClockInterval) {
+      clearInterval(ambientClockInterval);
+      ambientClockInterval = null;
+    }
+    if (ambientMasterGain) {
+      try {
+        ambientMasterGain.disconnect();
+      } catch (e) {}
+      ambientMasterGain = null;
+    }
+  },
+
+  isRunning: () => ambientRunning
+};
+

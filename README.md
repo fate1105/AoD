@@ -207,7 +207,11 @@ ArtOfDeduction/
 │   │   ├── case02_ravenscroft.js   # Dữ liệu Vụ án 02: Thư viện Ravenscroft
 │   │   ├── case03_final_melody.js  # Khung khởi tạo Vụ án 03
 │   │   └── case_template.js        # File khuôn mẫu chuẩn để thiết kế vụ án mới
-│   ├── ui.js                   # Trình render giao diện bàn điều tra, modal, timeline, bảng ghim
+│   ├── ui-core.js              # Khởi tạo theme, thanh thời gian, điều hướng scene & hotkeys
+│   ├── ui-modals.js            # Hệ thống modal: Hồ sơ, Sổ manh mối, Đọc vị, Đối chất, Mind Palace
+│   ├── ui-timeline.js          # Hệ thống phục dựng trục thời gian (Timeline Puzzle)
+│   ├── ui-board.js             # Bảng ghim Corkboard, kéo thả thẻ, dây nối SVG & phân tích 5 quan hệ
+│   ├── ui-scenes.js            # Render các scene chính (Case Select, Hub, Location, Decision, Ending)
 │   └── main.js                 # Điểm khởi chạy trò chơi
 ├── test/
 │   ├── smoke_test.js           # Bộ test tự động giả lập phá án và kiểm tra rule phạt
